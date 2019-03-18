@@ -61,12 +61,26 @@ function init(metadata) {
   log('Walkpaper init');
 }
 
+function _setDefaultWallpaper() {
+  let backgroundSettings = new Gio.Settings({
+    schema_id: BACKGROUND_SCHEMA
+  });
+  let pathSettings = Convenience.getSettings();
+  let paths = pathSettings.get_strv(WALLPAPER_KEY);
+  backgroundSettings.set_string(CURRENT_WALLPAPER_KEY, paths[0]);
+}
+
 let wSwitchedSignalId;
 let wAddedSignalId;
 let wRemovedSignalId;
 
 function enable() {
   log('Walkpaper enable');
+  // When system was shut down on workspace other than first
+  // it keeps wallpaper from that workspace. After reboot that
+  // image will appear on first. So it's necessary to set 
+  // default wallpaper on startup.
+  _setDefaultWallpaper();
   _workspaceNumChanged();
   wSwitchedSignalId = global.workspace_manager.connect(
     'workspace-switched',
@@ -84,6 +98,7 @@ function enable() {
 
 function disable() {
   log('Walkpaper disable');
+  _setDefaultWallpaper();
   global.workspace_manager.disconnect(wSwitchedSignalId);
   global.workspace_manager.disconnect(wAddedSignalId);
   global.workspace_manager.disconnect(wRemovedSignalId);
